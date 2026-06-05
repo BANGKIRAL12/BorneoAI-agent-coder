@@ -1,12 +1,30 @@
 import json
 import urllib.request
 import urllib.error
+import base64
+import mimetypes
 
 class GeminiRESTClient:
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
         self.api_key = api_key
         self.model_name = model_name
         self.history = []
+
+    def encode_image(self, image_path):
+        """Reads an image file and returns a Gemini-compatible inline_data part."""
+        mime_type, _ = mimetypes.guess_type(image_path)
+        if not mime_type or not mime_type.startswith("image/"):
+            mime_type = "image/jpeg" # Fallback
+            
+        with open(image_path, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode("utf-8")
+            
+        return {
+            "inline_data": {
+                "mime_type": mime_type,
+                "data": image_data
+            }
+        }
 
     def generate_content(self, system_instruction=None, tools_declarations=None, contents=None):
         """

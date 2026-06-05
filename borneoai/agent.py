@@ -4,10 +4,20 @@ from borneoai.tools import FileSandbox
 from borneoai.ui import console, show_spinner, print_ai_markdown, print_error, print_action, print_info
 from borneoai.gemini_client import GeminiRESTClient, TOOLS_DECLARATIONS
 
-def run_agent_turn(client, prompt, system_instruction, tools_map, tools_declarations):
+def run_agent_turn(client, prompt, images=None, system_instruction=None, tools_map=None, tools_declarations=None):
     """Runs a single agent turn, executing tools requested by Gemini and feeding back responses."""
-    if prompt:
-        client.append_message("user", [{"text": prompt}])
+    if prompt or images:
+        parts = []
+        if prompt:
+            parts.append({"text": prompt})
+        if images:
+            for img_path in images:
+                try:
+                    parts.append(client.encode_image(img_path))
+                except Exception as e:
+                    print_error(f"Failed to load image {img_path}: {e}")
+        
+        client.append_message("user", parts)
         
     while True:
         with show_spinner("AI is thinking..."):
@@ -123,33 +133,16 @@ def start_agent_mode(api_key, model_name, workspace_root, single_prompt=None):
     if single_prompt:
         print_info(f"Starting Agent Mode in [bold cyan]{workspace_root}[/bold cyan] to perform single task...")
         print_info(f"Model: [bold green]{model_name}[/bold green]")
-        run_agent_turn(client, single_prompt, system_instruction, tools_map, agent_tools_declarations)
+        run_agent_turn(client, single_prompt, None, system_instruction, tools_map, agent_tools_declarations)
         print_info("Task finished.")
     else:
-        from prompt_toolkit import PromptSession
-        from prompt_toolkit.history import InMemoryHistory
+        from borneoai.shell import start_interactive_shell
         
         print_info(f"Starting Interactive Agent Mode in [bold cyan]{workspace_root}[/bold cyan]")
         print_info(f"Model: [bold green]{model_name}[/bold green]")
         print_info("Type your instructions (e.g., 'create a FastAPI server in server.py and run it to verify'). Type 'exit' to quit.")
         
-        session = PromptSession(history=InMemoryHistory())
-        
-        while True:
-            try:
-                user_input = session.prompt("\nborneoai-agent ❯ ").strip()
-                if not user_input:
-                    continue
-                if user_input.lower() in ["exit", "quit"]:
-                    print_info("Exiting Agent Mode.")
-                    break
-                    
-                # In interactive shell, each new prompt is fed to the ongoing conversation client
-                run_agent_turn(client, user_input, system_instruction, tools_map, agent_tools_declarations)
-            except KeyboardInterrupt:
-                print_info("\nAction cancelled. Type 'exit' to quit.")
-            except EOFError:
-                print_info("\nExiting Agent Mode.")
-                break
-            except Exception as e:
-                print_error(f"Error in agent shell: {e}")
+        def agent_turn_handler(prompt, images):
+            return run_agent_turn(client, prompt, images, system_instruction, tools_map, agent_tools_declarations)
+            
+        start_interactive_shell("borneoai-agent", agent_turn_handler, workspace_root)

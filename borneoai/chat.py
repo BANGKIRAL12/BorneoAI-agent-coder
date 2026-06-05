@@ -4,10 +4,20 @@ from borneoai.tools import FileSandbox
 from borneoai.ui import console, show_spinner, print_ai_markdown, print_error, print_action, print_info
 from borneoai.gemini_client import GeminiRESTClient, TOOLS_DECLARATIONS
 
-def run_chat_turn(client, prompt, system_instruction, tools_map, tools_declarations):
+def run_chat_turn(client, prompt, images=None, system_instruction=None, tools_map=None, tools_declarations=None):
     """Runs a single chat turn, resolving read tools if requested by Gemini."""
-    if prompt:
-        client.append_message("user", [{"text": prompt}])
+    if prompt or images:
+        parts = []
+        if prompt:
+            parts.append({"text": prompt})
+        if images:
+            for img_path in images:
+                try:
+                    parts.append(client.encode_image(img_path))
+                except Exception as e:
+                    print_error(f"Failed to load image {img_path}: {e}")
+        
+        client.append_message("user", parts)
         
     while True:
         with show_spinner("AI is thinking..."):
@@ -125,33 +135,18 @@ def start_chat_mode(api_key, model_name, workspace_root, single_prompt=None):
     )
     
     if single_prompt:
-        print_info(f"Starting Chat Mode in [bold cyan]{workspace_root}[/bold cyan] to answer single prompt...")
+        print_info(f"Starting Chat Mode in [bold cyan]{workspace_root}[bold cyan] to answer single prompt...")
         print_info(f"Model: [bold green]{model_name}[/bold green]")
-        run_chat_turn(client, single_prompt, system_instruction, tools_map, chat_tools_declarations)
+        # For single prompt, we don't have interactive image selection, so images=None
+        run_chat_turn(client, single_prompt, None, system_instruction, tools_map, chat_tools_declarations)
     else:
-        from prompt_toolkit import PromptSession
-        from prompt_toolkit.history import InMemoryHistory
+        from borneoai.shell import start_interactive_shell
         
         print_info(f"Starting Chat Mode in [bold cyan]{workspace_root}[/bold cyan]")
         print_info(f"Model: [bold green]{model_name}[/bold green]")
         print_info("Type your questions (e.g., 'explain the project structure' or 'review setup.py'). Type 'exit' to quit.")
         
-        session = PromptSession(history=InMemoryHistory())
-        
-        while True:
-            try:
-                user_input = session.prompt("\nborneoai-chat ❯ ").strip()
-                if not user_input:
-                    continue
-                if user_input.lower() in ["exit", "quit"]:
-                    print_info("Exiting Chat Mode.")
-                    break
-                    
-                run_chat_turn(client, user_input, system_instruction, tools_map, chat_tools_declarations)
-            except KeyboardInterrupt:
-                print_info("\nAction cancelled. Type 'exit' to quit.")
-            except EOFError:
-                print_info("\nExiting Chat Mode.")
-                break
-            except Exception as e:
-                print_error(f"Error in chat shell: {e}")
+        def chat_turn_handler(prompt, images):
+            return run_chat_turn(client, prompt, images, system_instruction, tools_map, chat_tools_declarations)
+            
+        start_interactive_shell("borneoai-chat", chat_turn_handler, workspace_root)
