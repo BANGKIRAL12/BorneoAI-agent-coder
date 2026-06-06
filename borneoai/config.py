@@ -20,7 +20,8 @@ def load_config():
     
     config = {
         "api_key": env_key,
-        "default_model": "gemini-2.5-flash"
+        "default_model": "gemini-2.5-flash",
+        "gui_port": 12123
     }
 
     if os.path.exists(CONFIG_PATH):
@@ -31,6 +32,8 @@ def load_config():
                     config["api_key"] = saved["api_key"]
                 if saved.get("default_model"):
                     config["default_model"] = saved["default_model"]
+                if saved.get("gui_port"):
+                    config["gui_port"] = saved["gui_port"]
         except Exception as e:
             print_error(f"Failed to read config file: {e}")
             

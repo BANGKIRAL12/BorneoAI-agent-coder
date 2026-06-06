@@ -26,6 +26,7 @@ from borneoai.ui import print_banner, print_help, print_error, print_info, conso
 from borneoai.config import get_api_key_or_prompt, configure_wizard
 from borneoai.chat import start_chat_mode
 from borneoai.agent import start_agent_mode
+from borneoai.web.app import run_gui
 
 def main():
     # Show main banner
@@ -33,7 +34,7 @@ def main():
     
     # Custom parser
     parser = argparse.ArgumentParser(description="BorneoAI CLI Coding Agent", add_help=False)
-    parser.add_argument("command", nargs="?", choices=["chat", "agent", "config", "help"])
+    parser.add_argument("command", nargs="?", choices=["chat", "agent", "gui", "config", "help"])
     parser.add_argument("prompt", nargs="*", help="Direct instruction prompt for chat or agent mode")
     parser.add_argument("-m", "--model", help="Override Gemini model name")
     parser.add_argument("-d", "--dir", default=".", help="Directory to run BorneoAI in")
@@ -54,6 +55,11 @@ def main():
     # Route to configuration wizard
     if args.command == "config":
         configure_wizard()
+        sys.exit(0)
+        
+    # Route to GUI mode
+    if args.command == "gui":
+        run_gui(workspace_root)
         sys.exit(0)
         
     # Retrieve API key and default model name
@@ -85,19 +91,22 @@ def main():
             "[bold white]Welcome to BorneoAI! Choose a mode to proceed:[/bold white]\n\n"
             "  [bold cyan][1][/bold cyan] Chat Mode     [dim]-(Inspect, explain code, and discuss design pattern)[/dim]\n"
             "  [bold magenta][2][/bold magenta] Agent Mode    [dim]-(Create/edit code, manage files, run terminal commands)[/dim]\n"
-            "  [bold yellow][3][/bold yellow] Configuration [dim]-(Wizard setup for API key and default models)[/dim]\n"
-            "  [bold red][4][/bold red] Exit",
+            "  [bold green][3][/bold green] GUI Mode       [dim]-(Launch web-based interface on localhost:12123)[/dim]\n"
+            "  [bold yellow][4][/bold yellow] Configuration [dim]-(Wizard setup for API key and default models)[/dim]\n"
+            "  [bold red][5][/bold red] Exit",
             title="BorneoAI Terminal UI",
             border_style="magenta",
             expand=False
         ))
         
-        choice = Prompt.ask("\nChoose an option (1-4)", choices=["1", "2", "3", "4"], default="1")
+        choice = Prompt.ask("\nChoose an option (1-5)", choices=["1", "2", "3", "4", "5"], default="1")
         if choice == "1":
             start_chat_mode(api_key, model_name, workspace_root)
         elif choice == "2":
             start_agent_mode(api_key, model_name, workspace_root)
         elif choice == "3":
+            run_gui(workspace_root)
+        elif choice == "4":
             configure_wizard()
         else:
             print_info("Goodbye!")

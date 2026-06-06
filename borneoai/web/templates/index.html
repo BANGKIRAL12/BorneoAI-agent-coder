@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BorneoAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        .user-bubble { max-width: 60%; }
+        .ai-response { width: 100%; }
+        .ai-content { max-width: 80%; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
+        .dark-bg { background-color: #0f172a; }
+        .dark-card { background-color: #1e293b; }
+        .accent-color { color: #8b5cf6; }
+        .accent-bg { background-color: #8b5cf6; }
+        
+        pre {
+            background: #000 !important;
+            color: #fff !important;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border: 1px solid #334155;
+        }
+        code { font-family: 'Fira Code', monospace; }
+        
+        .custom-dropdown {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
+        }
+
+        .prose-invert blockquote {
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+            font-style: italic;
+            color: #94a3b8;
+        }
+        .prose-invert table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .prose-invert th, .prose-invert td {
+            border: 1px solid #334155;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .prose-invert th { background: #1e293b; }
+    </style>
+</head>
+<body class="dark-bg text-gray-200 h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="h-[64px] glass border-b border-gray-700 flex items-center justify-between px-6 sticky top-0 z-50">
+        <div class="text-xl font-bold tracking-tight accent-color">BorneoAI</div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleSettings()" class="p-2 hover:bg-gray-700 rounded-full transition-colors" title="Settings">
+                <i class="fa-solid fa-gear text-lg"></i>
+            </button>
+            <button onclick="toggleTheme()" class="p-2 hover:bg-gray-700 rounded-full transition-colors" title="Theme">
+                <i class="fa-solid fa-circle-half-stroke text-lg"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden relative flex flex-col">
+        
+        <!-- Chat Area -->
+        <div id="chat-container" class="chat-container flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+            <div class="ai-response flex gap-4">
+                <div class="w-8 h-8 rounded-full accent-bg flex items-center justify-center shrink-0 text-white font-bold text-xs">AI</div>
+                <div class="flex-1 space-y-2">
+                    <p class="text-gray-400 text-xs font-medium uppercase tracking-wider">BorneoAI</p>
+                    <div class="text-gray-200 leading-relaxed">
+                        Hello! I am BorneoAI. How can I help you with your project today?
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Input Area -->
+        <div class="p-4 md:p-8 w-full max-w-4xl mx-auto">
+            <div class="relative flex items-center gap-2 p-2 glass border border-gray-600 rounded-2xl shadow-2xl focus-within:border-purple-500 transition-all">
+                
+                <!-- Plus Button -->
+                <label class="p-3 hover:bg-gray-700 rounded-xl cursor-pointer transition-colors shrink-0">
+                    <i class="fa-solid fa-plus text-gray-400"></i>
+                    <input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleFileUpload(event)">
+                </label>
+
+                <!-- Text Input -->
+                <textarea id="user-input" 
+                    class="flex-1 bg-transparent border-none focus:ring-0 resize-none py-3 px-2 text-gray-200 placeholder-gray-500 max-h-40" 
+                    placeholder="Type your instruction..." 
+                    rows="1"
+                    oninput="autoResize(this)"></textarea>
+
+                <!-- Mode Selector -->
+                <div class="relative shrink-0">
+                    <select id="mode-select" class="custom-dropdown bg-gray-800 text-xs font-medium text-gray-300 border border-gray-600 rounded-lg px-3 py-2 pr-8 focus:ring-1 focus:ring-purple-500 outline-none cursor-pointer transition-all">
+                        <option value="chat">Chat</option>
+                        <option value="agent">Agent</option>
+                    </select>
+                </div>
+
+                <!-- Mic Button -->
+                <button onclick="startSpeech()" class="p-3 hover:bg-gray-700 rounded-xl transition-colors shrink-0" title="Speech to Text">
+                    <i class="fa-solid fa-microphone text-gray-400"></i>
+                </button>
+
+                <!-- Send/Stop Button -->
+                <button id="send-btn" onclick="sendMessage()" class="p-3 accent-bg text-white rounded-xl hover:opacity-90 transition-all shrink-0 flex items-center justify-center w-12 h-12">
+                    <i id="send-icon" class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="dark-card w-full max-w-md p-6 rounded-2xl border border-gray-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Configuration</h2>
+                <button onclick="toggleSettings()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">API Key</label>
+                    <input type="password" id="cfg-api-key" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-purple-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Default Model</label>
+                    <input type="text" id="cfg-model" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-purple-500 outline-none">
+                </div>
+                <div class="pt-4">
+                    <button onclick="saveSettings()" class="w-full accent-bg text-white py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</body>
+</html>
