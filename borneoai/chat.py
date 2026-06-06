@@ -4,9 +4,9 @@ from borneoai.tools import FileSandbox
 from borneoai.ui import console, show_spinner, print_ai_markdown, print_error, print_action, print_info
 from borneoai.gemini_client import GeminiRESTClient, TOOLS_DECLARATIONS
 
-def run_chat_turn(client, prompt, images=None, system_instruction=None, tools_map=None, tools_declarations=None):
+def run_chat_turn(client, prompt, images=None, videos=None, system_instruction=None, tools_map=None, tools_declarations=None):
     """Runs a single chat turn, resolving read tools if requested by Gemini."""
-    if prompt or images:
+    if prompt or images or videos:
         parts = []
         if prompt:
             parts.append({"text": prompt})
@@ -16,6 +16,12 @@ def run_chat_turn(client, prompt, images=None, system_instruction=None, tools_ma
                     parts.append(client.encode_image(img_path))
                 except Exception as e:
                     print_error(f"Failed to load image {img_path}: {e}")
+        if videos:
+            for vid_path in videos:
+                try:
+                    parts.append(client.encode_video(vid_path))
+                except Exception as e:
+                    print_error(f"Failed to load video {vid_path}: {e}")
         
         client.append_message("user", parts)
         
@@ -146,7 +152,7 @@ def start_chat_mode(api_key, model_name, workspace_root, single_prompt=None):
         print_info(f"Model: [bold green]{model_name}[/bold green]")
         print_info("Type your questions (e.g., 'explain the project structure' or 'review setup.py'). Type 'exit' to quit.")
         
-        def chat_turn_handler(prompt, images):
-            return run_chat_turn(client, prompt, images, system_instruction, tools_map, chat_tools_declarations)
+        def chat_turn_handler(prompt, images, videos=None):
+            return run_chat_turn(client, prompt, images, videos, system_instruction, tools_map, chat_tools_declarations)
             
         start_interactive_shell("borneoai-chat", chat_turn_handler, workspace_root)

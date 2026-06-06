@@ -79,6 +79,19 @@ Or execute a single-turn request:
 borneoai agent "Create a fastapi server with a greeting route and run it to verify"
 ```
 
+### 🖼️ Media Input (Interactive Shell)
+
+While in an interactive session (Chat or Agent mode), you can provide images or videos to the AI for analysis:
+
+- **Input Image**: Type `/image` and press `Tab`. A list of images found in your workspace and system will be displayed. Select an index to attach the image to your next prompt.
+- **Input Video**: Type `/video` and press `Tab`. A list of videos will be displayed. Select an index to attach the video.
+- **Cancel Media**: 
+  - Use `/image-cancel` to remove a previously selected image.
+  - Use `/video-cancel` to remove a previously selected video.
+- **Path Input**: You can also simply paste the absolute path of an image or video file directly into the prompt, and BorneoAI will automatically detect and attach it.
+
+The selected files are displayed in the bottom toolbar of the terminal for easy tracking.
+
 ### Command Flags
 
 - **Override Model**: Select a different model on-the-fly (e.g., using the smarter Pro model for debugging):

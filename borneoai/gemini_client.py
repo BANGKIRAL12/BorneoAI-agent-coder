@@ -26,6 +26,22 @@ class GeminiRESTClient:
             }
         }
 
+    def encode_video(self, video_path):
+        """Reads a video file and returns a Gemini-compatible inline_data part."""
+        mime_type, _ = mimetypes.guess_type(video_path)
+        if not mime_type or not mime_type.startswith("video/"):
+            mime_type = "video/mp4" # Fallback
+            
+        with open(video_path, "rb") as f:
+            video_data = base64.b64encode(f.read()).decode("utf-8")
+            
+        return {
+            "inline_data": {
+                "mime_type": mime_type,
+                "data": video_data
+            }
+        }
+
     def generate_content(self, system_instruction=None, tools_declarations=None, contents=None):
         """
         Sends a request to the Gemini API generateContent endpoint.
