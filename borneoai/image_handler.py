@@ -10,13 +10,14 @@ def find_images(filter_text="", workspace_root="."):
     IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"}
     
     # Directories to scan
-    # On Android/Termux, we try to include DCIM and Pictures if they exist
     scan_dirs = [workspace_root]
     
-    # Common Android paths
+    # Common Android paths and root search
     possible_android_paths = [
+        "/sdcard",
         "/sdcard/DCIM/Camera",
         "/sdcard/Pictures",
+        "/storage/emulated/0",
         "/storage/emulated/0/DCIM/Camera",
         "/storage/emulated/0/Pictures"
     ]
@@ -29,7 +30,18 @@ def find_images(filter_text="", workspace_root="."):
     
     for scan_dir in scan_dirs:
         try:
+            # Use os.walk but limit depth or handle errors to avoid hanging on system dirs
             for root, _, files in os.walk(scan_dir):
+                # Safety: avoid scanning too many directories if we are at root
+                if root == "/":
+                    # Only scan top level if at root to avoid infinite loop/slowness
+                    for file in files:
+                        ext = os.path.splitext(file)[1].lower()
+                        if ext in IMAGE_EXTENSIONS:
+                            if not filter_text or filter_text.lower() in file.lower():
+                                found_images.append(os.path.join(root, file))
+                    break
+                
                 for file in files:
                     ext = os.path.splitext(file)[1].lower()
                     if ext in IMAGE_EXTENSIONS:
@@ -38,7 +50,8 @@ def find_images(filter_text="", workspace_root="."):
         except Exception:
             continue # Skip directories we can't access
 
-    return found_images
+    # Remove duplicates
+    return list(set(found_images))
 
 def get_image_name(path):
     return os.path.basename(path)
