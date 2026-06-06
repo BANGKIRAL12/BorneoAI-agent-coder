@@ -110,11 +110,11 @@ def start_interactive_shell(prompt_prefix, handle_turn_func, workspace_root):
                 print_info("\nNo images found in the system.")
                 return
 
-            print("\n[bold cyan]Available Images:[/bold cyan]")
+            console.print("\n[bold cyan]Available Images:[/bold cyan]")
             for i, img in enumerate(images[:50]):
-                print(f"[{i}] {os.path.basename(img)} [dim]({img})[/dim]")
+                console.print(f"[{i}] {os.path.basename(img)} [dim]({img})[/dim]")
             if len(images) > 50:
-                print(f"... and {len(images)-50} more.")
+                console.print(f"... and {len(images)-50} more.")
 
             inner_kb = KeyBindings()
             @inner_kb.add('tab')
@@ -148,11 +148,11 @@ def start_interactive_shell(prompt_prefix, handle_turn_func, workspace_root):
                 print_info("\nNo videos found in the system.")
                 return
 
-            print("\n[bold cyan]Available Videos:[/bold cyan]")
+            console.print("\n[bold cyan]Available Videos:[/bold cyan]")
             for i, vid in enumerate(videos[:50]):
-                print(f"[{i}] {os.path.basename(vid)} [dim]({vid})[/dim]")
+                console.print(f"[{i}] {os.path.basename(vid)} [dim]({vid})[/dim]")
             if len(videos) > 50:
-                print(f"... and {len(videos)-50} more.")
+                console.print(f"... and {len(videos)-50} more.")
 
             inner_kb = KeyBindings()
             @inner_kb.add('tab')
@@ -202,7 +202,7 @@ def start_interactive_shell(prompt_prefix, handle_turn_func, workspace_root):
                     continue
                 print_info("Select an image to remove from the list:")
                 for i, img in enumerate(SELECTED_IMAGES):
-                    print(f"[{i}] {img}")
+                    console.print(f"[{i}] {img}")
                 try:
                     choice = input("Choose index: ")
                     idx = int(choice)
@@ -221,7 +221,7 @@ def start_interactive_shell(prompt_prefix, handle_turn_func, workspace_root):
                     continue
                 print_info("Select a video to remove from the list:")
                 for i, vid in enumerate(SELECTED_VIDEOS):
-                    print(f"[{i}] {vid}")
+                    console.print(f"[{i}] {vid}")
                 try:
                     choice = input("Choose index: ")
                     idx = int(choice)

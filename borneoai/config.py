@@ -1,6 +1,6 @@
 import os
 import json
-from borneoai.ui import console, print_success, print_error, print_info
+from borneoai.ui import console, print_success, print_error, print_info, print_warning
 
 CONFIG_DIR = os.path.expanduser("~/.config/borneoai")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
