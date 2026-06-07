@@ -24,8 +24,13 @@ def run_agent_turn(client, prompt, images=None, videos=None, system_instruction=
                     print_error(f"Failed to load video {vid_path}: {e}")
         
         client.append_message("user", parts)
+
+    max_turns = 10
+    turns = 0
         
-    while True:
+    while turns < max_turns:
+	turns += 1
+
         with show_spinner("AI is thinking..."):
             try:
                 response = client.generate_content(
@@ -97,6 +102,10 @@ def run_agent_turn(client, prompt, images=None, videos=None, system_instruction=
         # Append function responses with role 'function'
         client.append_message("function", response_parts)
         
+	if turns >= max_turns:
+        print_error("Agent dihentikan karena mencapai batas maksimal putaran (Max Turns Limit).")
+        return False
+
     return True
 
 def start_agent_mode(api_key, model_name, workspace_root, single_prompt=None):

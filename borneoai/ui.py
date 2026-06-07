@@ -21,6 +21,7 @@ BORNEO_THEME = Theme({
 })
 
 console = Console(theme=BORNEO_THEME)
+console_err = Console(stderr=True, theme=BORNEO_THEME)
 output_callback = None # Global callback for GUI streaming
 
 def _stream_output(text, type="text"):
@@ -75,7 +76,7 @@ def print_warning(msg):
 
 def print_error(msg):
     text = f"✘ {msg}"
-    console.print(f"[error]✘[/error] {msg}", file=sys.stderr)
+    console_err.print(f"[error]✘[/error] {msg}")
     _stream_output(text, "error")
 
 def print_action(action_type, details):
