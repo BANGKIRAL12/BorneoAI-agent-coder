@@ -29,7 +29,7 @@ def run_agent_turn(client, prompt, images=None, videos=None, system_instruction=
     turns = 0
         
     while turns < max_turns:
-	turns += 1
+	    turns += 1
 
         with show_spinner("AI is thinking..."):
             try:
