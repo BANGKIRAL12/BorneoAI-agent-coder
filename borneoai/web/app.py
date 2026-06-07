@@ -2,7 +2,7 @@ import os
 import json
 import uuid
 import queue
-from flask import Flask, request, jsonify, render_template, Response, stream_with_context
+from flask import Flask, request, jsonify, render_template, Response, stream_with_context, send_from_directory
 from flask_cors import CORS
 from borneoai.config import load_config, save_config
 from borneoai.gemini_client import GeminiRESTClient
@@ -53,7 +53,8 @@ def get_config():
     return jsonify({
         "api_key": "********" if config.get("api_key") else "",
         "default_model": config.get("default_model"),
-        "gui_port": config.get("gui_port")
+        "gui_port": config.get("gui_port"),
+        "workspace_root": os.path.abspath(os.getcwd())
     })
 
 @app.route('/api/config', methods=['POST'])
@@ -66,13 +67,13 @@ def update_config():
         return jsonify({"status": "success"})
     return jsonify({"status": "error", "message": "Failed to save config"}), 500
 
-@app.route('/api/chat')
+@app.route('/api/chat', methods=['POST'])
 def chat():
-    # Use GET or POST? For streaming, we often use GET with params or a POST that starts a stream.
-    # To keep it simple and consistent with the frontend, we'll use GET with params for the stream.
-    session_id = request.args.get("session_id", "default")
-    prompt = request.args.get("prompt", "")
-    mode = request.args.get("mode", "chat")
+    data = request.json or {}
+    session_id = data.get("session_id", "default")
+    prompt = data.get("prompt", "")
+    mode = data.get("mode", "chat")
+    images = data.get("images", [])
     
     session = get_session(session_id, mode)
     if not session:
@@ -97,11 +98,6 @@ def chat():
     def generate():
         try:
             # Run the AI turn in a separate thread or just call it and let the queue fill
-            # Since run_chat_turn/run_agent_turn are blocking, we can't easily run them in the same thread
-            # unless we use a different pattern. But for this simple GUI, we'll run it synchronously
-            # and then yield from the queue. 
-            # Wait, if we run it synchronously, the queue won't be read until it's finished.
-            # We need to run the AI turn in a background thread.
             import threading
             
             if mode == "agent":
@@ -136,7 +132,7 @@ def chat():
                 target = lambda: run_agent_turn(
                     client=client,
                     prompt=prompt,
-                    images=None,
+                    images=images,
                     videos=None,
                     system_instruction=system_instruction,
                     tools_map=tools_map,
@@ -167,7 +163,7 @@ def chat():
                 target = lambda: run_chat_turn(
                     client=client,
                     prompt=prompt,
-                    images=None,
+                    images=images,
                     videos=None,
                     system_instruction=system_instruction,
                     tools_map=tools_map,
@@ -206,6 +202,11 @@ def upload():
     file.save(filepath)
     
     return jsonify({"filepath": filepath})
+
+@app.route('/borneoai_uploads/<filename>')
+def uploaded_file(filename):
+    upload_dir = os.path.join(os.getcwd(), "borneoai_uploads")
+    return send_from_directory(upload_dir, filename)
 
 def run_gui(workspace_root=None):
     if workspace_root:

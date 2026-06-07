@@ -1,153 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BorneoAI</title>
+    <title>BorneoAI - Web Workspace</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
-        .user-bubble { max-width: 60%; }
-        .ai-response { width: 100%; }
-        .ai-content { max-width: 80%; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
-        .dark-bg { background-color: #0f172a; }
-        .dark-card { background-color: #1e293b; }
-        .accent-color { color: #8b5cf6; }
-        .accent-bg { background-color: #8b5cf6; }
-        
-        pre {
-            background: #000 !important;
-            color: #fff !important;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-            margin: 1rem 0;
-            border: 1px solid #334155;
-        }
-        code { font-family: 'Fira Code', monospace; }
-        
-        .custom-dropdown {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-            background-size: 1rem;
-        }
-
-        .prose-invert blockquote {
-            border-left: 4px solid #8b5cf6;
-            padding-left: 1rem;
-            font-style: italic;
-            color: #94a3b8;
-        }
-        .prose-invert table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-        }
-        .prose-invert th, .prose-invert td {
-            border: 1px solid #334155;
-            padding: 0.5rem;
-            text-align: left;
-        }
-        .prose-invert th { background: #1e293b; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;650&display=swap" rel="stylesheet">
+    <!-- Highlight.js Stylesheet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="dark-bg text-gray-200 h-screen flex flex-col">
+<body class="bg-[var(--bg-main)] text-[var(--text-primary)] h-screen flex overflow-hidden font-sans transition-colors duration-200">
 
-    <!-- Navbar -->
-    <nav class="h-[64px] glass border-b border-gray-700 flex items-center justify-between px-6 sticky top-0 z-50">
-        <div class="text-xl font-bold tracking-tight accent-color">BorneoAI</div>
-        <div class="flex items-center gap-4">
-            <button onclick="toggleSettings()" class="p-2 hover:bg-gray-700 rounded-full transition-colors" title="Settings">
-                <i class="fa-solid fa-gear text-lg"></i>
-            </button>
-            <button onclick="toggleTheme()" class="p-2 hover:bg-gray-700 rounded-full transition-colors" title="Theme">
-                <i class="fa-solid fa-circle-half-stroke text-lg"></i>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-[280px] bg-[var(--bg-sidebar)] border-r border-[var(--border-color)] flex flex-col shrink-0 transition-transform duration-300 md:translate-x-0 -translate-x-full fixed md:relative h-full z-40">
+        <!-- Logo / Brand -->
+        <div class="h-[64px] border-b border-[var(--border-color)] flex items-center justify-between px-6 shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <span class="text-lg font-bold tracking-tight text-[var(--text-primary)]">BorneoAI</span>
+            </div>
+            <!-- Mobile Close Button -->
+            <button onclick="toggleSidebar()" class="md:hidden p-1.5 hover:bg-slate-800/40 rounded-lg transition-colors text-[var(--text-secondary)]">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-hidden relative flex flex-col">
-        
-        <!-- Chat Area -->
+        <!-- Active Workspace Block -->
+        <div class="p-4 border-b border-[var(--border-color)] bg-[var(--bg-card)]/40 m-3 rounded-lg border border-[var(--border-color)] flex flex-col gap-1.5 shrink-0">
+            <div class="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+                <i class="fa-solid fa-folder-open text-amber-500"></i> Active Workspace
+            </div>
+            <div id="workspace-path" class="text-xs font-mono text-[var(--text-primary)] truncate" title="Detecting...">
+                Detecting path...
+            </div>
+        </div>
+
+        <!-- Mode Indicator / Selector -->
+        <div class="px-4 py-2 flex flex-col gap-2 shrink-0">
+            <div class="text-[10px] uppercase font-bold tracking-wider text-[var(--text-secondary)]">Select Mode</div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="setMode('chat')" id="sidebar-mode-chat" class="py-2 px-3 text-xs font-semibold rounded-lg border border-indigo-600 bg-indigo-600 text-white transition-all shadow flex flex-col items-center justify-center gap-1.5">
+                    <i class="fa-regular fa-comments text-base"></i>
+                    <span>Chat Mode</span>
+                </button>
+                <button onclick="setMode('agent')" id="sidebar-mode-agent" class="py-2 px-3 text-xs font-semibold rounded-lg border border-[var(--border-color)] hover:border-indigo-500 text-[var(--text-primary)] hover:bg-indigo-500/10 transition-all flex flex-col items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-user-gear text-base"></i>
+                    <span>Agent Mode</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Spacer & Help Card -->
+        <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+            <div class="p-4 bg-[var(--bg-card)] rounded-lg border border-[var(--border-color)] text-xs space-y-3 shadow-sm">
+                <p class="font-bold text-indigo-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info"></i> How to use
+                </p>
+                <div class="text-[var(--text-secondary)] space-y-2 leading-relaxed">
+                    <p><b>Chat Mode:</b> Ask code explanations, review algorithms, or discuss ideas. Safe & read-only.</p>
+                    <p><b>Agent Mode:</b> Give coding tasks. The AI can write files, read logs, and run shell tests to fix issues autonomously.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-[var(--border-color)] bg-[var(--bg-card)]/30 space-y-3 shrink-0">
+            <div class="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="active-model" class="truncate max-w-[150px]">Gemini REST API</span>
+                </span>
+                <span class="font-semibold text-indigo-500">v1.2.0</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="toggleSettings()" class="flex-1 py-2 px-3 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 text-[var(--text-primary)] rounded-lg border border-[var(--border-color)] flex items-center justify-center gap-1.5 text-xs font-semibold transition-colors shadow-sm" title="Settings">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </button>
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 text-[var(--text-primary)] rounded-lg border border-[var(--border-color)] flex items-center justify-center transition-colors shadow-sm" title="Toggle Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/60 z-30 md:hidden"></div>
+
+    <!-- Main Chat Window -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Top bar -->
+        <header class="h-[64px] border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between px-4 md:px-6 shrink-0 z-10">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden p-2 hover:bg-slate-800/40 rounded-lg transition-colors text-[var(--text-secondary)]">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div>
+                    <h1 class="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                        <span id="header-mode-badge" class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-600 text-white">Chat Mode</span>
+                        <span id="header-mode-desc" class="text-xs text-[var(--text-secondary)] font-normal hidden sm:inline">Explain & Discuss Code</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- Clear Button -->
+                <button onclick="clearChat()" class="p-2 hover:bg-red-600/10 hover:text-red-500 text-[var(--text-secondary)] rounded-lg transition-colors" title="Clear conversation">
+                    <i class="fa-regular fa-trash-can text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat messages view -->
         <div id="chat-container" class="chat-container flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
-            <div class="ai-response flex gap-4">
-                <div class="w-8 h-8 rounded-full accent-bg flex items-center justify-center shrink-0 text-white font-bold text-xs">AI</div>
-                <div class="flex-1 space-y-2">
-                    <p class="text-gray-400 text-xs font-medium uppercase tracking-wider">BorneoAI</p>
-                    <div class="text-gray-200 leading-relaxed">
-                        Hello! I am BorneoAI. How can I help you with your project today?
-                    </div>
+            <!-- Welcome screen when empty -->
+            <div id="welcome-screen" class="max-w-2xl mx-auto py-12 md:py-20 text-center space-y-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-indigo-600 text-white text-3xl shadow-xl">
+                    <i class="fa-solid fa-robot animate-bounce"></i>
+                </div>
+                <div class="space-y-3">
+                    <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Welcome to BorneoAI</h2>
+                    <p class="text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+                        I am your workspace assistant. I can inspect your code, write scripts, or execute shell commands right here in your project path.
+                    </p>
+                </div>
+                
+                <!-- Prompt suggestion cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto pt-6 text-left">
+                    <button onclick="useSuggestion('List files in the workspace')" class="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 border border-[var(--border-color)] rounded-lg text-xs hover:border-indigo-500 transition-all text-[var(--text-primary)] flex items-start gap-3 shadow-sm">
+                        <i class="fa-solid fa-folder text-indigo-500 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <p class="font-bold">List Workspace Files</p>
+                            <p class="text-[var(--text-secondary)] mt-0.5">Show all files and folders in this workspace.</p>
+                        </div>
+                    </button>
+                    <button onclick="useSuggestion('Explain this project structure')" class="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 border border-[var(--border-color)] rounded-lg text-xs hover:border-indigo-500 transition-all text-[var(--text-primary)] flex items-start gap-3 shadow-sm">
+                        <i class="fa-solid fa-lightbulb text-amber-500 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <p class="font-bold">Explain Architecture</p>
+                            <p class="text-[var(--text-secondary)] mt-0.5">Get a high-level explanation of this project.</p>
+                        </div>
+                    </button>
+                    <button onclick="useSuggestion('Create a Python script that tests math functions')" class="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 border border-[var(--border-color)] rounded-lg text-xs hover:border-indigo-500 transition-all text-[var(--text-primary)] flex items-start gap-3 shadow-sm">
+                        <i class="fa-solid fa-file-code text-emerald-500 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <p class="font-bold">Create Test Script</p>
+                            <p class="text-[var(--text-secondary)] mt-0.5">Create a python script to run test functions.</p>
+                        </div>
+                    </button>
+                    <button onclick="useSuggestion('Run a terminal command to check package versions')" class="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card)]/80 border border-[var(--border-color)] rounded-lg text-xs hover:border-indigo-500 transition-all text-[var(--text-primary)] flex items-start gap-3 shadow-sm">
+                        <i class="fa-solid fa-terminal text-purple-500 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <p class="font-bold">Run Command</p>
+                            <p class="text-[var(--text-secondary)] mt-0.5">Run CLI operations in the sandboxed terminal.</p>
+                        </div>
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Floating Input Area -->
-        <div class="p-4 md:p-8 w-full max-w-4xl mx-auto">
-            <div class="relative flex items-center gap-2 p-2 glass border border-gray-600 rounded-2xl shadow-2xl focus-within:border-purple-500 transition-all">
+        <div class="p-4 md:p-6 w-full max-w-4xl mx-auto shrink-0">
+            <!-- Image Previews -->
+            <div id="image-preview-container" class="hidden flex flex-wrap gap-2 p-3 bg-[var(--bg-card)] border border-[var(--border-color)] border-b-0 rounded-t-lg">
+                <!-- Dynamically populated thumbnails -->
+            </div>
+            
+            <div class="relative flex items-center gap-2 p-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-md focus-within:border-indigo-500 transition-all">
                 
                 <!-- Plus Button -->
-                <label class="p-3 hover:bg-gray-700 rounded-xl cursor-pointer transition-colors shrink-0">
-                    <i class="fa-solid fa-plus text-gray-400"></i>
+                <label class="p-3 bg-[var(--bg-main)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-lg cursor-pointer transition-colors shrink-0 flex items-center justify-center w-11 h-11 shadow-sm" title="Attach image">
+                    <i class="fa-solid fa-plus text-lg"></i>
                     <input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleFileUpload(event)">
                 </label>
 
                 <!-- Text Input -->
                 <textarea id="user-input" 
-                    class="flex-1 bg-transparent border-none focus:ring-0 resize-none py-3 px-2 text-gray-200 placeholder-gray-500 max-h-40" 
-                    placeholder="Type your instruction..." 
+                    class="flex-1 bg-transparent border-none focus:ring-0 resize-none py-2 px-1 text-[var(--text-primary)] placeholder-[var(--text-secondary)] max-h-40 outline-none text-sm leading-relaxed" 
+                    placeholder="Type your prompt..." 
                     rows="1"
+                    onkeydown="handleKeyDown(event)"
                     oninput="autoResize(this)"></textarea>
 
-                <!-- Mode Selector -->
-                <div class="relative shrink-0">
-                    <select id="mode-select" class="custom-dropdown bg-gray-800 text-xs font-medium text-gray-300 border border-gray-600 rounded-lg px-3 py-2 pr-8 focus:ring-1 focus:ring-purple-500 outline-none cursor-pointer transition-all">
-                        <option value="chat">Chat</option>
-                        <option value="agent">Agent</option>
+                <!-- Mode Dropdown (Desktop only, synced with sidebar) -->
+                <div class="relative shrink-0 hidden sm:block">
+                    <select id="mode-select" onchange="syncModeFromDropdown(this)" class="custom-dropdown bg-[var(--bg-main)] text-xs font-semibold text-[var(--text-primary)] border border-[var(--border-color)] rounded-lg px-3 py-2 pr-8 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer transition-all shadow-sm">
+                        <option value="chat">Chat Mode</option>
+                        <option value="agent">Agent Mode</option>
                     </select>
                 </div>
 
                 <!-- Mic Button -->
-                <button onclick="startSpeech()" class="p-3 hover:bg-gray-700 rounded-xl transition-colors shrink-0" title="Speech to Text">
-                    <i class="fa-solid fa-microphone text-gray-400"></i>
+                <button onclick="startSpeech()" class="p-3 bg-[var(--bg-main)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-lg transition-colors shrink-0 flex items-center justify-center w-11 h-11 shadow-sm" title="Speech to Text">
+                    <i class="fa-solid fa-microphone text-lg"></i>
                 </button>
 
                 <!-- Send/Stop Button -->
-                <button id="send-btn" onclick="sendMessage()" class="p-3 accent-bg text-white rounded-xl hover:opacity-90 transition-all shrink-0 flex items-center justify-center w-12 h-12">
-                    <i id="send-icon" class="fa-solid fa-paper-plane"></i>
+                <button id="send-btn" onclick="sendMessage()" class="bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shrink-0 flex items-center justify-center w-11 h-11 shadow-md">
+                    <i id="send-icon" class="fa-solid fa-paper-plane text-sm"></i>
                 </button>
             </div>
+            
+            <div class="text-[10px] text-center text-[var(--text-secondary)] mt-2">
+                Press Enter to send. Shift+Enter for new line. BorneoAI runs sandboxed in your working directory.
+            </div>
         </div>
-    </main>
+    </div>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="dark-card w-full max-w-md p-6 rounded-2xl border border-gray-700 shadow-2xl">
+        <div class="bg-[var(--bg-card)] w-full max-w-md p-6 rounded-lg border border-[var(--border-color)] shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Configuration</h2>
-                <button onclick="toggleSettings()" class="text-gray-400 hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
+                <h2 class="text-lg font-bold text-[var(--text-primary)]">Configuration</h2>
+                <button onclick="toggleSettings()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">API Key</label>
-                    <input type="password" id="cfg-api-key" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-purple-500 outline-none">
+                    <label class="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">API Key</label>
+                    <input type="password" id="cfg-api-key" placeholder="Enter Gemini API key" class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-1">Default Model</label>
-                    <input type="text" id="cfg-model" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-purple-500 outline-none">
+                    <label class="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Default Model</label>
+                    <input type="text" id="cfg-model" placeholder="e.g. gemini-2.5-flash" class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
                 </div>
                 <div class="pt-4">
-                    <button onclick="saveSettings()" class="w-full accent-bg text-white py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                    <button onclick="saveSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition-colors shadow-md">
                         Save Changes
                     </button>
                 </div>
@@ -155,7 +255,9 @@
         </div>
     </div>
 
-    <script src="/static/js/main.js"></script>
+    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="/static/js/main.js"></script>
 </body>
 </html>
