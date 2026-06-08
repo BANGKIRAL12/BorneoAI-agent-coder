@@ -29,7 +29,7 @@ def run_agent_turn(client, prompt, images=None, videos=None, system_instruction=
     turns = 0
         
     while turns < max_turns:
-	    turns += 1
+        turns += 1
 
         with show_spinner("AI is thinking..."):
             try:
@@ -40,7 +40,7 @@ def run_agent_turn(client, prompt, images=None, videos=None, system_instruction=
             except Exception as e:
                 print_error(f"\nGemini API Error: {e}")
                 return False
-                
+
         if "candidates" not in response or not response["candidates"]:
             # If the response doesn't contain candidates, check for error details
             print_error(f"Received empty response from Gemini: {response}")
@@ -102,7 +102,7 @@ def run_agent_turn(client, prompt, images=None, videos=None, system_instruction=
         # Append function responses with role 'function'
         client.append_message("function", response_parts)
         
-	if turns >= max_turns:
+    if turns >= max_turns:
         print_error("Agent dihentikan karena mencapai batas maksimal putaran (Max Turns Limit).")
         return False
 

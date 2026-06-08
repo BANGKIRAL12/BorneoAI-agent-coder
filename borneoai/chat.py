@@ -144,7 +144,13 @@ def start_chat_mode(api_key, model_name, workspace_root, single_prompt=None):
         print_info(f"Starting Chat Mode in [bold cyan]{workspace_root}[bold cyan] to answer single prompt...")
         print_info(f"Model: [bold green]{model_name}[/bold green]")
         # For single prompt, we don't have interactive image selection, so images=None
-        run_chat_turn(client, single_prompt, None, system_instruction, tools_map, chat_tools_declarations)
+        run_chat_turn(
+            client=client, 
+            prompt=single_prompt, 
+            system_instruction=system_instruction, 
+            tools_map=tools_map, 
+            tools_declarations=chat_tools_declarations
+        )
     else:
         from borneoai.shell import start_interactive_shell
         
@@ -153,6 +159,14 @@ def start_chat_mode(api_key, model_name, workspace_root, single_prompt=None):
         print_info("Type your questions (e.g., 'explain the project structure' or 'review setup.py'). Type 'exit' to quit.")
         
         def chat_turn_handler(prompt, images, videos=None):
-            return run_chat_turn(client, prompt, images, videos, system_instruction, tools_map, chat_tools_declarations)
+            return run_chat_turn(
+                client=client, 
+                prompt=prompt, 
+                images=images, 
+                videos=videos, 
+                system_instruction=system_instruction, 
+                tools_map=tools_map, 
+                tools_declarations=chat_tools_declarations
+            )
             
         start_interactive_shell("borneoai-chat", chat_turn_handler, workspace_root)
